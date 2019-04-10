@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 @MyRequestMapping("/user")
 public class UserHandler {
 
-    @MyAutowired("userService")
+    @MyAutowired
     private UserService userService;
 
     @MyRequestMapping("/query")

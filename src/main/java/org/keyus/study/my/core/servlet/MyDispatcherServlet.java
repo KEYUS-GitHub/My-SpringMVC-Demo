@@ -186,36 +186,35 @@ public class MyDispatcherServlet extends HttpServlet {
             Object instance = entry.getValue();
             // 获取当前实例的Class对象
             Class<?> clazz = instance.getClass();
-            if (clazz.isAnnotationPresent(MyController.class)){
-                // 获取所有该Class声明的属性
-                Field[] fields = clazz.getDeclaredFields();
-                for (Field field : fields){
-                    if (field.isAnnotationPresent(MyAutowired.class)){
-                        MyAutowired autowired = field.getAnnotation(MyAutowired.class);
-                        String key = autowired.value();
-                        if ("".equals(key)){
-                              // 有误的代码段,待完善
-//                            // 获取当前字段的Class对象
-//                            Class<? extends Field> fieldClass = field.getClass();
-//                            for (Object object : ioc.values()){
-//                                if (object.getClass() == fieldClass) {
-//                                    // 进行属性的反射注入
-//                                    field.setAccessible(true);
-//                                    try {
-//                                        field.set(instance, ioc.get(key));
-//                                    } catch (IllegalAccessException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                            }
-                        } else {
-                            // 进行属性的反射注入
-                            field.setAccessible(true);
-                            try {
-                                field.set(instance, ioc.get(key));
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
+            // 获取所有该Class声明的属性
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field field : fields){
+                if (field.isAnnotationPresent(MyAutowired.class)){
+                    MyAutowired autowired = field.getAnnotation(MyAutowired.class);
+                    String key = autowired.value();
+                    if ("".equals(key)){
+                        // 获取当前字段实际的Class对象
+                        Class<?> fieldType = field.getType();
+                        for (Object object : ioc.values()){
+                            // 判断object对象是不是当前field属性类的实例或者子类的实例
+                            if (fieldType.isAssignableFrom(object.getClass())) {
+                                // 进行属性的反射注入
+                                field.setAccessible(true);
+                                try {
+                                    field.set(instance, object);
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
+                                }
                             }
+                        }
+                    } else {
+                        // 进行属性的反射注入
+                        field.setAccessible(true);
+                        try {
+                            // 直接根据map中的key获取
+                            field.set(instance, ioc.get(key));
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
                         }
                     }
                 }
